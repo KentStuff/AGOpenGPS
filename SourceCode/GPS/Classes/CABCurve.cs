@@ -143,13 +143,18 @@ namespace AgOpenGPS
             double dz = refPoint2.northing - refPoint1.northing;
 
             //how far are we away from the reference line at 90 degrees - 2D cross product and distance
-            double distanceFromRefLine = ((dz * pivot.easting) - (dx * pivot.northing) + (refPoint2.easting
-                                    * refPoint1.northing) - (refPoint2.northing * refPoint1.easting))
-                                    / Math.Sqrt((dz * dz) + (dx * dx));
+            double lookdist = (Math.Max(mf.vehicle.minTurningRadius * 1.5, mf.pn.speed * 0.277777 * 2));
+            vec3 ABLOOK = new vec3(pivot.easting + (Math.Sin(mf.fixHeading) * (lookdist)), pivot.northing + (Math.Cos(mf.fixHeading) * (lookdist)), 0);
 
-            double RefDist = (distanceFromRefLine + (isFixHeadingSameWayAsRef ? mf.tool.toolOffset : -mf.tool.toolOffset)) / widthMinusOverlap;
-            if (RefDist < 0) howManyPathsAway = (int)(RefDist - 0.5);
-            else howManyPathsAway = (int)(RefDist + 0.5);
+            double distanceFromRefLine2 = ((dz * ABLOOK.easting) - (dx * ABLOOK.northing) + (refPoint2.easting
+                                     * refPoint1.northing) - (refPoint2.northing * refPoint1.easting))
+                                         / Math.Sqrt((dz * dz) + (dx * dx));
+
+
+            if (!mf.isAutoSteerBtnOn)
+            {
+                howManyPathsAway = Math.Round(distanceFromRefLine2 / widthMinusOverlap, 0, MidpointRounding.AwayFromZero);
+            }
 
             //build current list
             isCurveValid = true;
@@ -375,16 +380,9 @@ namespace AgOpenGPS
             }
             else
             {
-                if ((Math.Abs(lastCurveDistance) > (0.5 * mf.tool.toolWidth)) || !isCurveValid)
-                {
-                    //build reference list every 2 seconds
-                    if ((mf.secondsSinceStart - lastSecond) > 2)
-                    {
-                        lastSecond = mf.secondsSinceStart;
-
+               
                         BuildCurveCurrentList(pivot);
-                    }
-                }
+               
             }
 
 

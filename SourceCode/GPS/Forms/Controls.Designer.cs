@@ -60,6 +60,15 @@ namespace AgOpenGPS
             //if contour is on, turn it off
             if (ct.isContourBtnOn) { if (ct.isContourBtnOn) btnContour.PerformClick(); }
 
+            if (isAutoSteerBtnOn)
+            {
+                isAutoSteerBtnOn = false;
+                curve.GetCurrentCurveLine(pivotAxlePos, steerAxlePos);
+                isAutoSteerBtnOn = true;
+
+
+            }
+
             //turn off ABLine 
             ABLine.isABLineBeingSet = false;
             ABLine.isABLineSet = false;
@@ -124,7 +133,15 @@ namespace AgOpenGPS
             //if contour is on, turn it off
             if (ct.isContourBtnOn) { if (ct.isContourBtnOn) btnContour.PerformClick(); }
             //btnContourPriority.Enabled = true;
-                
+
+            if (isAutoSteerBtnOn)
+            {
+                isAutoSteerBtnOn = false;
+                ABLine.GetCurrentABLine(pivotAxlePos, steerAxlePos);
+                isAutoSteerBtnOn = true;
+
+            }
+
             curve.isBtnCurveOn = false;
             btnCurve.Image = Properties.Resources.CurveOff;
 
@@ -186,6 +203,13 @@ namespace AgOpenGPS
                 ABLine.SetABLineByHeading();
                 ABLine.isABLineSet = true;
                 ABLine.isABLineLoaded = true;
+                if (isAutoSteerBtnOn)
+                {
+                    isAutoSteerBtnOn = false;
+                    ABLine.GetCurrentABLine(pivotAxlePos, steerAxlePos);
+                    isAutoSteerBtnOn = true;
+
+                }
                 yt.ResetYouTurn();
             }
             else if (curve.isBtnCurveOn && curve.numCurveLines > 0)
@@ -203,6 +227,14 @@ namespace AgOpenGPS
                     curve.refList.Add(curve.curveArr[idx].curvePts[i]);
                 }
                 curve.isCurveSet = true;
+                if (isAutoSteerBtnOn)
+                {
+                    isAutoSteerBtnOn = false;
+                    curve.GetCurrentCurveLine(pivotAxlePos, steerAxlePos);
+                    isAutoSteerBtnOn = true;
+
+
+                }
                 yt.ResetYouTurn();
             }
 

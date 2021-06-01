@@ -96,14 +96,22 @@ namespace AgOpenGPS
                 //z2-z1
                 dy = refABLineP2.northing - refABLineP1.northing;
 
-                distanceFromRefLine = ((dy * pivot.easting) - (dx * pivot.northing) + (refABLineP2.easting
-                                        * refABLineP1.northing) - (refABLineP2.northing * refABLineP1.easting))
-                                            / Math.Sqrt((dy * dy) + (dx * dx));
+                //how far are we away from the reference line at 90 degrees
+                //distanceFromRefLine = ((dy * pivot.easting) - (dx * pivot.northing) + (refABLineP2.easting
+                //* refABLineP1.northing) - (refABLineP2.northing * refABLineP1.easting))
+                /// Math.Sqrt((dy * dy) + (dx * dx));
+                double lookdist = (Math.Max(mf.vehicle.minTurningRadius * 1.5, mf.pn.speed * 0.277777 * 2));
+                vec3 ABLOOK = new vec3(pivot.easting + (Math.Sin(mf.fixHeading) * (lookdist)), pivot.northing + (Math.Cos(mf.fixHeading) * (lookdist)), 0);
 
-                //Which ABLine is the vehicle on, negative is left and positive is right side
-                double RefDist = (distanceFromRefLine + (isABSameAsVehicleHeading ? mf.tool.toolOffset : -mf.tool.toolOffset)) / widthMinusOverlap;
-                if (RefDist < 0) howManyPathsAway = (int)(RefDist - 0.5);
-                else howManyPathsAway = (int)(RefDist + 0.5);
+                double distanceFromRefLine2 = ((dy * ABLOOK.easting) - (dx * ABLOOK.northing) + (refABLineP2.easting
+                                         * refABLineP1.northing) - (refABLineP2.northing * refABLineP1.easting))
+                                             / Math.Sqrt((dy * dy) + (dx * dx));
+
+
+                if (!mf.isAutoSteerBtnOn)
+                {
+                    howManyPathsAway = Math.Round(distanceFromRefLine2 / widthMinusOverlap, 0, MidpointRounding.AwayFromZero);
+                }
 
                 //depending which way you are going, the offset can be either side
                 vec2 point1 = new vec2((Math.Cos(-abHeading) * (widthMinusOverlap * howManyPathsAway + (isABSameAsVehicleHeading ? -mf.tool.toolOffset : mf.tool.toolOffset))) + refPoint1.easting,

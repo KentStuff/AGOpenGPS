@@ -56,6 +56,7 @@ namespace AgOpenGPS
 
         //pure pursuit values
         public vec3 pivot = new vec3(0, 0, 0);
+        public vec3 ABAtYouTurn = new vec3(0, 0, 0);
 
         public vec2 goalPointYT = new vec2(0, 0);
         public vec2 radiusPointYT = new vec2(0, 0);
@@ -549,6 +550,7 @@ namespace AgOpenGPS
                 //generate the turn points
                 ytList = dubYouTurnPath.GenerateDubins(start, goal);
                 AddSequenceLines(head);
+                ABAtYouTurn = goal;
 
                 if (ytList.Count == 0) return false;
                 else youTurnPhase = 1;
@@ -832,6 +834,7 @@ namespace AgOpenGPS
 
                 //generate the turn points
                 ytList = dubYouTurnPath.GenerateDubins(start, goal);
+                ABAtYouTurn = goal;
                 int count = ytList.Count;
                 if (count == 0) return false;
 
@@ -1001,6 +1004,20 @@ namespace AgOpenGPS
             isYouTurnTriggered = false;
             ResetCreatedYouTurn();
             mf.isBoundAlarming = false;
+            double widthMinusOverlap = mf.tool.toolWidth - mf.tool.toolOverlap;
+
+            double dx, dy;
+            dx = mf.ABLine.refABLineP2.easting - mf.ABLine.refABLineP1.easting;
+            //z2-z1
+            dy = mf.ABLine.refABLineP2.northing - mf.ABLine.refABLineP1.northing;
+
+            //how far are we away from the reference line at 90 degrees
+            double distanceFromRefLine = ((dy * ABAtYouTurn.easting) - (dx * ABAtYouTurn.northing) + (mf.ABLine.refABLineP2.easting
+                                    * mf.ABLine.refABLineP1.northing) - (mf.ABLine.refABLineP2.northing * mf.ABLine.refABLineP1.easting))
+                                        / Math.Sqrt((dy * dy) + (dx * dx));
+
+
+            mf.ABLine.howManyPathsAway = Math.Round(distanceFromRefLine / widthMinusOverlap, 0, MidpointRounding.AwayFromZero);
         }
 
         public void Set_Alternate_skips()
@@ -1088,6 +1105,7 @@ namespace AgOpenGPS
                     goal.easting = rEastYT + (Math.Cos(-head) * turnOffset);
                     goal.northing = rNorthYT + (Math.Sin(-head) * turnOffset);
                 }
+                ABAtYouTurn = goal;
             }
 
             //generate the turn points
@@ -1288,6 +1306,43 @@ namespace AgOpenGPS
                     {
                         onA = ptCount - closestPt;
                     }
+
+                    int halfOfYou = (int)ytList.Count / 2;
+                    if (closestPt > halfOfYou)
+                    {
+                        double widthMinusOverlap = mf.tool.toolWidth - mf.tool.toolOverlap;
+
+                        double px, py;
+                        if (mf.ABLine.isBtnABLineOn)
+                        {
+                            px = mf.ABLine.refABLineP2.easting - mf.ABLine.refABLineP1.easting;
+                            //z2-z1
+                            py = mf.ABLine.refABLineP2.northing - mf.ABLine.refABLineP1.northing;
+
+                            //how far are we away from the reference line at 90 degrees
+                            double distanceFromRefLine = ((py * ABAtYouTurn.easting) - (px * ABAtYouTurn.northing) + (mf.ABLine.refABLineP2.easting
+                                                    * mf.ABLine.refABLineP1.northing) - (mf.ABLine.refABLineP2.northing * mf.ABLine.refABLineP1.easting))
+                                                        / Math.Sqrt((py * py) + (px * px));
+
+
+                            mf.ABLine.howManyPathsAway = Math.Round(distanceFromRefLine / widthMinusOverlap, 0, MidpointRounding.AwayFromZero);
+                        }
+                        else if (mf.curve.isBtnCurveOn)
+                        {
+                            px = mf.curve.refPoint2.easting - mf.curve.refPoint1.easting;
+                            //z2-z1
+                            py = mf.curve.refPoint2.northing - mf.curve.refPoint1.northing;
+
+                            //how far are we away from the reference line at 90 degrees
+                            double distanceFromRefLine = ((py * ABAtYouTurn.easting) - (px * ABAtYouTurn.northing) + (mf.curve.refPoint2.easting
+                                                    * mf.curve.refPoint1.northing) - (mf.curve.refPoint2.northing * mf.curve.refPoint1.easting))
+                                                        / Math.Sqrt((py * py) + (px * px));
+
+
+                            mf.curve.howManyPathsAway = Math.Round(distanceFromRefLine / widthMinusOverlap, 0, MidpointRounding.AwayFromZero);
+                        }
+                    }
+
 
                     //return and reset if too far away or end of the line
                     if (B >= ptCount - 1)
