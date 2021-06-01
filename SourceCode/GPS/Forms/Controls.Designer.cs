@@ -1595,6 +1595,15 @@ namespace AgOpenGPS
                 }
                 ABLine.moveDistance = 0;
                 curve.moveDistance = 0;
+                if (isAutoSteerBtnOn)
+                {
+                    isAutoSteerBtnOn = false;
+                    curve.GetCurrentCurveLine(pivotAxlePos, steerAxlePos);
+                    ABLine.GetCurrentABLine(pivotAxlePos, steerAxlePos);
+                    isAutoSteerBtnOn = true;
+
+
+                }
             }
         }
         private void btnYouSkipEnable_Click(object sender, EventArgs e)
